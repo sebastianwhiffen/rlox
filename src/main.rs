@@ -30,7 +30,9 @@ fn run_file(path: String) {
 
 fn run_prompt() {
     let mut input = String::new();
+    let mut had_error = false;
     loop {
+
         println!("> ");
 
         io::stdout().flush().unwrap();
@@ -45,5 +47,21 @@ fn run_prompt() {
 }
 
 fn run(input: &mut String) {
-    println!("input: {}", input);
+    let mut scanner = scanner::Scanner {
+        source: input.clone(),
+        tokens: Vec::new(),
+        start: 0,
+        current: 0,
+        line: 1,
+    };
+
+    if let Err(errors) = scanner.scan_tokens(){
+        for error in errors.iter() {
+            println!("{}", error);
+        }
+    };
+    
+    for token in scanner.tokens.iter() {
+        println!("{}", token.to_string());
+    }
 }
