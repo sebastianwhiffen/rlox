@@ -1,3 +1,5 @@
+use std::thread::current;
+
 use crate::error::syntax_error::SyntaxError;
 use crate::token::token_type::TokenType;
 use crate::token::Token;
@@ -60,14 +62,14 @@ impl Scanner {
                 } else {
                     self.add_token(TokenType::Equal)
                 }
-            },
+            }
             '<' => {
                 if self.match_next('=') {
                     self.add_token(TokenType::LessEqual)
                 } else {
                     self.add_token(TokenType::Less)
                 }
-            },
+            }
             '>' => {
                 if self.match_next('=') {
                     self.add_token(TokenType::GreaterEqual)
@@ -75,20 +77,108 @@ impl Scanner {
                     self.add_token(TokenType::Greater)
                 }
             }
-            _ => return Err(SyntaxError),
+            '/' => {
+                if self.match_next('/') {
+                    while self.peek() != '\n' && !self.is_at_end() {
+                        self.advance();
+                    }
+                } else {
+                    self.add_token(TokenType::Slash);
+                }
+            }
+            ' ' => {}
+            '\r' => {}
+            '\t' => {}
+            '\n' => self.line += 1,
+            '"' => {
+                if let Err(error) = self.string() {
+                    return Err(error);
+                }
+            }
+
+            _ => {
+                if self.is_digit(c) {
+                    self.number()
+                } else {
+                    return Err(SyntaxError {
+                        line: self.line,
+                        message: "".to_string(),
+                    });
+                };
+            }
         };
         Ok(())
+    }
+    
+    fn number(&mut self) {
+        while self.is_digit(self.peek()) {
+            self.advance();
+        }
+        if self.peek() == '.' && self.is_digit(self.peek_next()) {
+            self.advance();
+            while self.is_digit(self.peek()) {
+                self.advance();
+            }
+        }
+        self.add_token_with_literal(
+            TokenType::Number,
+            self.source[(self.start as usize)..(self.current as usize)].to_string(),
+        );
+    }
+
+    fn peek_next(&self) -> char {
+        if (self.current + 1) as usize >= self.source.len() {
+            return '\0';
+        };
+        return self
+            .source
+            .chars()
+            .nth((self.current + 1) as usize)
+            .unwrap();
+    }
+
+    fn is_digit(&self, c: char) -> bool {
+        return c >= '0' && c <= '9';
+    }
+
+    fn string(&mut self) -> Result<(), SyntaxError> {
+        while self.peek() != '"' && !self.is_at_end() {
+            if self.peek() == '\n' {
+                self.line += 1
+            }
+            self.advance();
+        }
+        if self.is_at_end() {
+            return Err(SyntaxError {
+                line: self.line,
+                message: "string was not terminated".to_string(),
+            });
+        }
+        self.advance();
+
+        let literal =
+            self.source[((self.start + 1) as usize)..((self.current - 1) as usize)].to_string();
+        self.add_token_with_literal(TokenType::String, literal);
+        Ok(())
+    }
+
+    fn peek(&self) -> char {
+        if self.is_at_end() {
+            return '\0';
+        } else {
+            return self.source.chars().nth(self.current as usize).unwrap();
+        }
     }
 
     fn match_next(&mut self, expected: char) -> bool {
         if self.is_at_end() {
-            return false
+            return false;
         }
         if self.source.chars().nth((self.current) as usize).unwrap() != expected {
-            return false
+            return false;
         }
         self.current += 1;
-        return true
+        return true;
     }
 
     fn advance(&mut self) -> char {
@@ -102,11 +192,14 @@ impl Scanner {
     }
 
     fn add_token(&mut self, token_type: TokenType) {
-        self.tokens.push(Token::new(
-            token_type,
-            "".to_string(),
-            "".to_string(),
-            self.line,
-        ));
+        let text = self.source[(self.start as usize)..(self.current as usize)].to_string();
+        self.tokens
+            .push(Token::new(token_type, text, "".to_string(), self.line));
+    }
+
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: String) {
+        let text = self.source[(self.start as usize)..(self.current as usize)].to_string();
+        self.tokens
+            .push(Token::new(token_type, text, literal, self.line));
     }
 }

@@ -1,10 +1,16 @@
-use std::{error::Error, fmt};
+use std::fmt;
 
-#[derive(Debug)]
-pub struct SyntaxError;
+pub struct SyntaxError {
+    pub line: i32,
+    pub message: String,
+}
 
 impl fmt::Display for SyntaxError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Syntax error occurred")
+        write!(
+            f,
+            "Syntax error occurred. {} line: {}",
+            self.message, self.line
+        )
     }
 }

@@ -9,7 +9,7 @@ pub struct Token {
 
 impl Token {
     pub fn to_string(&self) -> String {
-        format!("{:?} {} {}", self.token_type, self.lexeme, self.literal)
+        format!("token: {:?}, lexeme: {}, literal: {}", self.token_type, self.lexeme, self.literal)
     }
 
     pub fn new(token_type: token_type::TokenType, lexeme: String, literal: String, line: i32) -> Token {
