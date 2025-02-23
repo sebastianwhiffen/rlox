@@ -1,7 +1,8 @@
+use std::str::FromStr;
 use std::thread::current;
 
 use crate::error::syntax_error::SyntaxError;
-use crate::token::token_type::TokenType;
+use crate::token::token_type::{TokenType, KEYWORDS};
 use crate::token::Token;
 
 pub struct Scanner {
@@ -95,10 +96,11 @@ impl Scanner {
                     return Err(error);
                 }
             }
-
             _ => {
                 if self.is_digit(c) {
                     self.number()
+                } else if self.is_alpha(c) {
+                    self.identifier();
                 } else {
                     return Err(SyntaxError {
                         line: self.line,
@@ -109,7 +111,28 @@ impl Scanner {
         };
         Ok(())
     }
-    
+
+    fn identifier(&mut self) {
+        while self.is_alphanumeric(self.peek()) {
+            self.advance();
+        }
+        let literal = self.source[(self.start as usize)..(self.current as usize)].to_string();
+        if let Some((_, token)) = KEYWORDS.get_key_value(literal.as_str()) {
+            self.add_token_with_literal(token.clone(), literal);
+        }
+        else{
+            self.add_token(TokenType::Identifier);
+        }
+    }
+
+    fn is_alpha(&self, c: char) -> bool {
+        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+    }
+
+    fn is_alphanumeric(&self, c: char) -> bool {
+        self.is_alpha(c) || self.is_digit(c)
+    }
+
     fn number(&mut self) {
         while self.is_digit(self.peek()) {
             self.advance();
