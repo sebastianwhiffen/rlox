@@ -6,6 +6,7 @@ use std::{
 mod error;
 mod token;
 mod scanner;
+mod parser;
 
 fn main() {
     
