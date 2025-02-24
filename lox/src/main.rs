@@ -3,24 +3,33 @@ use std::{
     io::{self, Write},
 };
 
+use lox_macros::define_ast;
+use token::Token;
+
 mod error;
-mod token;
-mod scanner;
+mod macros;
 mod parser;
+mod scanner;
+mod token;
+
+define_ast!("Binary : left: Expr, operator: Token , right: Expr");
+define_ast!("Grouping : expression: Expr");
+define_ast!("Literal : value: Object");
+define_ast!("Unary : operator: Token, right: Expr");
 
 fn main() {
     
-    let args: Vec<String> = env::args().collect();
-    if args.iter().count() > 3 {
-        println!("usage: rlox [script]");
-        std::process::exit(64);
-    } else if args.iter().count() == 2 {
-        println!("usage: rlox [file]");
-        run_file(args[1].clone());
-    } else {
-        run_prompt();
-        println!("usage: rlox [prompt]");
-    }
+    // let args: Vec<String> = env::args().collect();
+    // if args.iter().count() > 3 {
+    //     println!("usage: rlox [script]");
+    //     std::process::exit(64);
+    // } else if args.iter().count() == 2 {
+    //     println!("usage: rlox [file]");
+    //     run_file(args[1].clone());
+    // } else {
+    //     run_prompt();
+    //     println!("usage: rlox [prompt]");
+    // }
 }
 
 fn run_file(path: String) {
@@ -33,7 +42,6 @@ fn run_prompt() {
     let mut input = String::new();
     let mut had_error = false;
     loop {
-
         println!("> ");
 
         io::stdout().flush().unwrap();
@@ -41,7 +49,9 @@ fn run_prompt() {
         input.clear();
         let bytes_read = io::stdin().read_line(&mut input).unwrap();
 
-        if bytes_read == 0 {break;}
+        if bytes_read == 0 {
+            break;
+        }
 
         run(&mut input);
     }
@@ -56,12 +66,12 @@ fn run(input: &mut String) {
         line: 1,
     };
 
-    if let Err(errors) = scanner.scan_tokens(){
+    if let Err(errors) = scanner.scan_tokens() {
         for error in errors.iter() {
             println!("{}", error);
         }
     };
-    
+
     for token in scanner.tokens.iter() {
         println!("{}", token.to_string());
     }
