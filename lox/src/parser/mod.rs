@@ -1,30 +1,17 @@
 pub mod parser {
 
+    use lox_macros::define_ast;
+
     use crate::token::Token;
 
-    trait Expr {
-        fn get_left(&mut self) -> &Box<dyn Expr>;
-        fn get_operator(&mut self) -> &Token;
-        fn get_right(&mut self) -> &Box<dyn Expr>;
-    }
-
-    struct Binary {
-        left: Box<dyn Expr>,
-        operator: Token,
-        right: Box<dyn Expr>,
-    }
-
-    impl Expr for Binary {
-        fn get_left(&mut self) -> &Box<dyn Expr> {
-            &self.left
-        }
-
-        fn get_operator(&mut self) -> &Token {
-            &self.operator
-        }
-
-        fn get_right(&mut self) -> &Box<dyn Expr> {
-            &self.right
-        }
-    }
+    define_ast!(
+    "Binary : left: Box<dyn Expr>, operator: Token, right: Box<dyn Expr>, 
+    | Grouping : expression: Box<dyn Expr>
+    | Literal : value: Box<dyn std::any::Any>
+    | Unary : operator: Token, right: Box<dyn Expr> 
+    "
+    );
+    // define_ast!("Grouping : expression: Expr ");
+    // define_ast!("Literal : value: Object ");
+    // define_ast!("Unary : operator: Token, right: Expr ");
 }

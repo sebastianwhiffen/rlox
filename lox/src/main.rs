@@ -12,24 +12,18 @@ mod parser;
 mod scanner;
 mod token;
 
-define_ast!("Binary : left: Expr, operator: Token , right: Expr");
-define_ast!("Grouping : expression: Expr");
-define_ast!("Literal : value: Object");
-define_ast!("Unary : operator: Token, right: Expr");
-
 fn main() {
-    
-    // let args: Vec<String> = env::args().collect();
-    // if args.iter().count() > 3 {
-    //     println!("usage: rlox [script]");
-    //     std::process::exit(64);
-    // } else if args.iter().count() == 2 {
-    //     println!("usage: rlox [file]");
-    //     run_file(args[1].clone());
-    // } else {
-    //     run_prompt();
-    //     println!("usage: rlox [prompt]");
-    // }
+    let args: Vec<String> = env::args().collect();
+    if args.iter().count() > 3 {
+        println!("usage: rlox [script]");
+        std::process::exit(64);
+    } else if args.iter().count() == 2 {
+        println!("usage: rlox [file]");
+        run_file(args[1].clone());
+    } else {
+        run_prompt();
+        println!("usage: rlox [prompt]");
+    }
 }
 
 fn run_file(path: String) {
