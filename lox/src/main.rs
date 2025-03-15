@@ -3,27 +3,60 @@ use std::{
     io::{self, Write},
 };
 
-use lox_macros::define_ast;
-use token::Token;
+use ast::{
+    expr::expr::Expr,
+    printer::printer::Printer,
+    token::{token::TokenType, Token},
+};
 
+mod ast;
 mod error;
-mod macros;
 mod parser;
 mod scanner;
-mod token;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.iter().count() > 3 {
-        println!("usage: rlox [script]");
-        std::process::exit(64);
-    } else if args.iter().count() == 2 {
-        println!("usage: rlox [file]");
-        run_file(args[1].clone());
-    } else {
-        run_prompt();
-        println!("usage: rlox [prompt]");
-    }
+    // let args: Vec<String> = env::args().collect();
+    // if args.iter().count() > 3 {
+    //     println!("usage: rlox [script]");
+    //     std::process::exit(64);
+    // } else if args.iter().count() == 2 {
+    //     println!("usage: rlox [file]");
+    //     run_file(args[1].clone());
+    // } else {
+    //     run_prompt();
+    //     println!("usage: rlox [prompt]");
+    // }
+
+    let expr: Expr = Expr::Binary(
+        Box::new(Expr::Unary(
+            Token {
+                token_type: TokenType::Minus,
+                lexeme: "-".to_owned(),
+                line: 1,
+                ..Token::default()
+            },
+            Box::new(Expr::Literal(Token {
+                token_type: TokenType::Number,
+                lexeme: "123".to_owned(),
+                line: 1,
+                ..Token::default()
+            })),
+        )),
+        Token {
+            token_type: TokenType::Star,
+            lexeme: "*".to_owned(),
+            line: 1,
+            ..Token::default()
+        },
+        Box::new(Expr::Grouping(Box::new(Expr::Literal(Token {
+            token_type: TokenType::Number,
+            lexeme: "123".to_owned(),
+            line: 1,
+            ..Token::default()
+        })))),
+    );
+
+    print!("{}", Printer {}.print(expr))
 }
 
 fn run_file(path: String) {

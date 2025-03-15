@@ -1,4 +1,6 @@
-pub mod token_type {
+use token::TokenType;
+
+pub mod token {
     use lazy_static::lazy_static;
     use std::collections::HashMap;
     use strum_macros::EnumString;
@@ -71,31 +73,36 @@ pub mod token_type {
 }
 
 pub struct Token {
-    pub token_type: token_type::TokenType,
+    pub token_type: token::TokenType,
     pub lexeme: String,
-    pub literal: String,
+    pub literal: Option<Literal>,
     pub line: i32,
+}
+
+impl Default for Token {
+    fn default() -> Self {
+        Token {
+            token_type: TokenType::Eof,
+            lexeme: "".to_string(),
+            literal: None,
+            line: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Literal {
+    Nil,
+    Boolean(bool),
+    Number(f64),
+    String(String),
 }
 
 impl Token {
     pub fn to_string(&self) -> String {
         format!(
-            "token: {:?}, lexeme: {}, literal: {}",
+            "{:?}, {}, {:?}",
             self.token_type, self.lexeme, self.literal
         )
-    }
-
-    pub fn new(
-        token_type: token_type::TokenType,
-        lexeme: String,
-        literal: String,
-        line: i32,
-    ) -> Token {
-        Token {
-            token_type,
-            lexeme,
-            literal,
-            line,
-        }
     }
 }

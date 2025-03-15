@@ -7,5 +7,4 @@ edition = "2021"
 lazy_static = "1.5.0"
 strum = "0.27.1"
 strum_macros = "0.27.1"
-lox_macros ={ path = "./lox_macros"}
 

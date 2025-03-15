@@ -1,9 +1,9 @@
 use std::str::FromStr;
 use std::thread::current;
 
+use crate::ast::token::*;
+use crate::ast::token::{token::TokenType, token::KEYWORDS};
 use crate::error::syntax_error::SyntaxError;
-use crate::token::token_type::{TokenType, KEYWORDS};
-use crate::token::Token;
 
 pub struct Scanner {
     pub source: String,
@@ -23,12 +23,7 @@ impl Scanner {
             }
         }
 
-        self.tokens.push(Token::new(
-            TokenType::Eof,
-            "".to_string(),
-            "".to_string(),
-            self.line,
-        ));
+        self.tokens.push(Token::default());
 
         if !errors.is_empty() {
             Err(errors)
@@ -116,11 +111,11 @@ impl Scanner {
         while self.is_alphanumeric(self.peek()) {
             self.advance();
         }
-        let literal = self.source[(self.start as usize)..(self.current as usize)].to_string();
-        if let Some((_, token)) = KEYWORDS.get_key_value(literal.as_str()) {
-            self.add_token_with_literal(token.clone(), literal);
-        }
-        else{
+        let text = self.source[(self.start as usize)..(self.current as usize)].to_string();
+        if let Some((_, token)) = KEYWORDS.get_key_value(text.as_str()) {
+            let value = text.parse::<String>().unwrap();
+            self.add_token_with_literal(token.clone(), Literal::String(value));
+        } else {
             self.add_token(TokenType::Identifier);
         }
     }
@@ -143,11 +138,11 @@ impl Scanner {
                 self.advance();
             }
         }
-        self.add_token_with_literal(
-            TokenType::Number,
-            self.source[(self.start as usize)..(self.current as usize)].to_string(),
-        );
+        let text = &self.source[(self.start as usize)..(self.current as usize)];
+        let value = text.parse::<f64>().unwrap();
+        self.add_token_with_literal(TokenType::Number, Literal::Number(value));
     }
+    
 
     fn peek_next(&self) -> char {
         if (self.current + 1) as usize >= self.source.len() {
@@ -179,9 +174,12 @@ impl Scanner {
         }
         self.advance();
 
-        let literal =
+        let text =
             self.source[((self.start + 1) as usize)..((self.current - 1) as usize)].to_string();
-        self.add_token_with_literal(TokenType::String, literal);
+
+            let value = text.parse::<String>().unwrap();
+
+        self.add_token_with_literal(TokenType::String, Literal::String(value));
         Ok(())
     }
 
@@ -217,12 +215,22 @@ impl Scanner {
     fn add_token(&mut self, token_type: TokenType) {
         let text = self.source[(self.start as usize)..(self.current as usize)].to_string();
         self.tokens
-            .push(Token::new(token_type, text, "".to_string(), self.line));
+            // .push(Token::new(token_type, text, "".to_string(), self.line));
+            .push(Token {
+                token_type,
+                lexeme: text,
+                line: self.line,
+                ..Default::default()
+            });
     }
 
-    fn add_token_with_literal(&mut self, token_type: TokenType, literal: String) {
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Literal) {
         let text = self.source[(self.start as usize)..(self.current as usize)].to_string();
-        self.tokens
-            .push(Token::new(token_type, text, literal, self.line));
+        self.tokens.push(Token {
+            token_type,
+            lexeme: text,
+            literal: Some(literal),
+            line: self.line,
+        });
     }
 }
